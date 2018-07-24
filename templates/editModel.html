@@ -1,0 +1,33 @@
+{% extends 'banner.html' %}
+{% set username = username %}
+
+{% block content %}
+
+<h1> Edit Model </h1>
+
+<form action="{{ url_for('editModel',make_id = make_id, model_id = model.id)}}" method = 'post'>
+
+<dl>
+    <dt>Name:</dt>
+        <dd><input type ='text' size='30' name='name' value = '{{model.name}}'></dd>
+    <dt>Description:</dt>
+        <dd><textarea name = 'description' rows='5' cols='40' >{{model.description}}</textarea></dd>
+    <dt>Make:</dt>
+    <select name = "make">
+        {% for make in makes %}
+        {% if current_make == make.name %}
+        <option value = '{{make.name}}' selected>{{make.name}}</option>
+        {% else %}
+        <option value = '{{make.name}}'>{{make.name}}</option>
+        {% endif %}
+        {% endfor %}
+    </select>
+</dl>
+
+
+<input type='submit' value='Submit'>
+
+<a href = "{{url_for('showModel', make_id = make_id, model_id = model.id)}}"> Cancel </a>
+</form>
+
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'banner.html' %}
+{% set username = username %}
+
+{% block content %}
+<div class = "page_title">
+    <h2> {{make.name}} Model List</h2>
+</div>
+
+<section class = "model_list">
+    {% if models %}
+    {% for model in models %}
+
+    <section class = "brand_model">
+    <h3> <a href = "{{url_for('showModel', model_id = model.id)}}"> {{model.name}} </a> </h3>
+    </section>
+
+    {% endfor %}
+    {% else %}
+    <h4> No Models Found! </h4>
+    {% endif %}
+
+    {% if username %}
+    <h4><a href = "{{url_for('addModel', make_id = make.id)}}">Add Model </a></h4>
+    {% endif %}
+</div>
+{% endblock %}

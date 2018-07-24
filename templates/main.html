@@ -1,0 +1,30 @@
+{% extends 'banner.html' %}
+{% set username = username %}
+
+{% block content %}
+
+<div class = "page_title">
+    <h2> Browse by Make </h1>
+</div>
+
+{% for make in makes %}
+<section class = "make_item">
+    <h3> <a href = "{{url_for('showMake', make_id = make.id)}}"> {{make.name}} </a> </h3>
+</section>
+{% endfor %}
+
+<section class = "model_list">
+    <h2> Recent Additions </h2>
+
+    {% for recent in recent_adds %}
+    <section class = "brand_model">
+    <h3> <a href = "{{url_for('showModel', model_id = recent.id)}}"> {{recent.name}} </a> </h3>
+    </section>
+</section>
+{% endfor %}
+<br>
+{% if username %}
+<h4><a href = "{{url_for('addModel', make_id = makes[0].id)}}">Add Model </a></h4>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'banner.html' %}
+{% set username = username %}
+
+{% block content %}
+    <div class = "page_title">
+        <h2> Are you sure you want to delete {{model.name}}? </h2>
+    </div>
+    <div class = "options">
+        <form action = "{{ url_for('deleteModel', model_id = model.id)}}" method = 'post'>
+            <input type='submit' value='Delete'>
+        </form>
+        <a href = "{{url_for('showModel', make_id = make_id, model_id = model.id)}}"> Cancel </a>
+    </div>
+{% endblock %}

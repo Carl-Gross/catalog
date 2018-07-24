@@ -1,0 +1,20 @@
+{% extends 'banner.html' %}
+{% set username = username %}
+
+{% block content %}
+<div class = "page_title">
+    <h2> {{make_name}} {{model.name}} </h2>
+    <br>
+</div>
+
+<div class = "desc">
+    <h3> Description: </h3>
+    <h4>{{model.description}}</h4>
+</div>
+
+{% if userID == model.user_id %}
+<a href={{url_for('editModel', make_id = model.make_id, model_id = model.id)}}>Edit</a>
+<a href={{url_for('deleteModel', make_id = model.make_id, model_id = model.id)}}>Delete</a>
+{% endif %}
+<br><br>
+{% endblock %}

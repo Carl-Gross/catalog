@@ -1,0 +1,29 @@
+<html>
+    <head>
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+    </head>
+    <body>
+        <div class = "header">
+            <div class = "title">
+                <h1> Carl's Car Catalog </h1>
+            </div>
+            <div class = "userstatus">
+                {% if username %}
+                <p>{% print username %}<br>
+                <a href="{{ url_for('gdisconnect')}}">Sign out</a>
+                {% else %}
+                <a href="{{ url_for('showLogin')}}">Sign in</a>
+                {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class = "spacer"></div>
+
+        <div class = "content">
+            {% block content %}{% endblock %}
+        </div>
+    </body>
+    <footer>
+        <a href="{{ url_for('showIndex', username = username)}}">Back to Index</a>
+    </footer>
+</html>
