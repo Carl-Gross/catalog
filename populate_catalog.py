@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from db_setup import User, Make, Model
 
-engine = create_engine('sqlite:///catalog_project.db')
+engine = create_engine('postgresql://catalog:fsbb231@localhost/catalog')
 # Bind the engine to the metadata of the Base class so that the
 # declaratives can be accessed through a DBSession instance
 

@@ -58,6 +58,6 @@ class Model(Base):
         }
 
 
-engine = create_engine('sqlite:///catalog_project.db')
+engine = create_engine('postgresql://catalog:fsbb231@localhost/catalog')
 
 Base.metadata.create_all(engine)

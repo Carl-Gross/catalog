@@ -22,6 +22,7 @@ import json
 from flask import make_response
 import requests
 
+from application import app as application
 app = Flask(__name__)
 
 # get client ID from client_secrets file (dl from google)
@@ -47,13 +48,10 @@ def showIndex():
 
 @app.route('/showMake/<int:make_id>/')
 def showMake(make_id):
-    	try:
-		make = session.query(Make).filter_by(id = make_id).one()
-    		models = session.query(Model).filter_by(make_id = make_id).order_by(
+    make = session.query(Make).filter_by(id = make_id).one()
+    models = session.query(Model).filter_by(make_id = make_id).order_by(
             Model.name).all()
-    	except Exception:
-		print Exception
-	return render_template('showMake.html', make = make,
+    return render_template('showMake.html', make = make,
                             models = models, username = getuser(),
                             userID = getCurrentUserID())
 
