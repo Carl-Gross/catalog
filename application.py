@@ -4,9 +4,8 @@ sys.path.insert(0, '/var/www/html/catalog/')
 
 from flask import Flask, render_template, request, redirect
 from flask import url_for, jsonify, flash
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from db_setup import Base, Make, Model, User
+from flask_sqlalchemy import SQLAlchemy
+from db_setup import Make, Model, Owner
 import time
 
 # imports for state token
@@ -23,6 +22,11 @@ from flask import make_response
 import requests
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://catalog:fsbb231@localhost/catalog'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_NATIVE_UNICODE'] = False
+app.debug = True
+app.secret_key = 'super_secret_key'
 
 # get client ID from client_secrets file (dl from google)
 CLIENT_ID = json.loads(
@@ -30,17 +34,12 @@ CLIENT_ID = json.loads(
 APPLICATION_NAME = "Catalog App"
 
 # connect to database and start session
-engine = create_engine('postgresql://catalog:fsbb231@localhost/catalog', echo=True)
-Base.metadata.bind = engine
-
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
-
+db = SQLAlchemy(app)
 
 @app.route('/')
 def showIndex():
-    makes = session.query(Make).order_by(Make.name).all()
-    recent_adds = session.query(Model).order_by(
+    makes = Make.query.order_by(Make.name).all()
+    recent_adds = Model.query.order_by(
                             Model.last_update.desc()).all()
     return render_template('main.html', makes = makes,
                             recent_adds = recent_adds, username = getuser())
@@ -48,22 +47,20 @@ def showIndex():
 @app.route('/showMake/<int:make_id>/')
 def showMake(make_id):
     	try:
-		make = session.query(Make).filter_by(id = make_id).one()
-    		models = session.query(Model).filter_by(make_id = make_id).order_by(
-            Model.name).all()
+		make = Make.query.first()
     	except Exception:
 		print Exception
-	return render_template('showMake.html', make = make,
-                            models = models, username = getuser(),
-                            userID = getCurrentUserID())
+		print "showMake exception block"
+	return render_template('showmake.html', make = make,
+                          username = getuser())
 
 @app.route('/showModel/<int:model_id>/')
 def showModel(model_id):
     model = session.query(Model).filter_by(id = model_id).one()
     make_name = session.query(Make).filter_by(id = model.make_id).one().name
     print('current ID is' + str(getCurrentUserID()) + ' and modelID is '
-                            + str(model.user_id))
-    return render_template('showModel.html', model = model,
+                            + str(model.owner_id))
+    return render_template('showmodel.html', model = model,
                             username = getuser(), make_name = make_name,
                             userID = getCurrentUserID())
 
@@ -85,7 +82,7 @@ def addModel(make_id):
         newModel = Model(name=request.form['name'],
                         description=request.form['description'],
                         make_id=make_id_update.id,
-                        user_id=login_session['user_id'],
+                        owner_id=login_session['user_id'],
                         last_update = str(time.time()))
 
         #commit to the db and redirect to the original page
@@ -103,7 +100,7 @@ def addModel(make_id):
 @app.route('/<int:make_id>/editModel/<int:model_id>', methods=['GET', 'POST'])
 def editModel(make_id, model_id):
     model = session.query(Model).filter_by(id = model_id).one()
-    if 'username' not in login_session or getCurrentUserID() != model.user_id:
+    if 'username' not in login_session or getCurrentUserID() != model.owner_id:
         flash("Unauthorized User")
         return redirect('/login')
 
@@ -130,7 +127,7 @@ def editModel(make_id, model_id):
 @app.route('/deleteModel/<int:model_id>',  methods=['GET', 'POST'])
 def deleteModel(model_id):
     deleteMe = session.query(Model).filter_by(id = model_id).one()
-    if 'username' not in login_session or getCurrentUserID() != deleteMe.user_id:
+    if 'username' not in login_session or getCurrentUserID() != deleteMe.owner_id:
         flash("Unauthorized User")
         return redirect('/login')
     if request.method == 'POST':
@@ -227,22 +224,22 @@ def gconnect():
     return 'User ' + str(login_session['username'])
 
 def createUser(login_session):
-    newUser = User(name=login_session['username'], email=login_session[
+    newUser = Owner(name=login_session['username'], email=login_session[
                    'email'])
     session.add(newUser)
     session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
+    user = session.query(Owner).filter_by(email=login_session['email']).one()
     return user.id
 
 
 def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
+    user = session.query(Owner).filter_by(id=user_id).one()
     return user
 
 
 def getUserID(email):
     try:
-        user = session.query(User).filter_by(email=email).one()
+        user = session.query(Owner).filter_by(email=email).one()
         return user.id
     except:
         return None
@@ -294,6 +291,5 @@ def getCurrentUserID():
 
 
 if __name__ == '__main__':
-    app.secret_key = 'super_secret_key'
     app.debug = True
     app.run(host = '0.0.0.0')

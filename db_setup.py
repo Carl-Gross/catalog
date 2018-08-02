@@ -1,25 +1,26 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-from sqlalchemy import create_engine
 
-Base = declarative_base()
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://catalog:fsbb231@localhost/catalog'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+class Owner(db.Model):
+    __tablename__ = 'owner'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(250), nullable=False)
+    email = db.Column(db.String(250), nullable=False)
 
 
-class User(Base):
-    __tablename__ = 'user'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
-    email = Column(String(250), nullable=False)
-
-
-class Make(Base):
+class Make(db.Model):
     __tablename__ = 'make'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(250), nullable=False)
 
 # We added this serialize function to be able to send JSON objects in a
 # serializable format
@@ -31,17 +32,17 @@ class Make(Base):
         }
 
 
-class Model(Base):
+class Model(db.Model):
     __tablename__ = 'model'
 
-    name = Column(String(80), nullable=False)
-    id = Column(Integer, primary_key=True)
-    description = Column(String(250))
-    make_id = Column(Integer, ForeignKey('make.id'))
-    make = relationship(Make)
-    user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User)
-    last_update = Column(String(250))
+    name = db.Column(db.String(80), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(250))
+    make_id = db.Column(db.Integer, db.ForeignKey('make.id'))
+    make = db.relationship('Make')
+    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'))
+    owner = db.relationship('Owner')
+    last_update = db.Column(db.String(250))
 
 
 # We added this serialize function to be able to send JSON objects in a
@@ -53,11 +54,8 @@ class Model(Base):
             'description': self.description,
             'id': self.id,
             'make_id': self.make_id,
-            'user_id': self.user_id,
+            'owner_id': self.owner_id,
             'last_update': self.last_update
         }
 
-
-engine = create_engine('postgresql://catalog:fsbb231@localhost/catalog')
-
-Base.metadata.create_all(engine)
+db.create_all()
