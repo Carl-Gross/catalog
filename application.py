@@ -46,18 +46,16 @@ def showIndex():
 
 @app.route('/showMake/<int:make_id>/')
 def showMake(make_id):
-    	try:
-		make = Make.query.first()
-    	except Exception:
-		print Exception
-		print "showMake exception block"
-	return render_template('showmake.html', make = make,
-                          username = getuser())
+    make = Make.query.filter_by(id = make_id).one()
+    models = Model.query.filter_by(make_id = make_id).order_by(
+            Model.name).all()
+    return render_template('showmake.html', make = make,
+                            models = models, username = getuser())
 
 @app.route('/showModel/<int:model_id>/')
 def showModel(model_id):
-    model = session.query(Model).filter_by(id = model_id).one()
-    make_name = session.query(Make).filter_by(id = model.make_id).one().name
+    model = Model.query.filter_by(id = model_id).one()
+    make_name = Make.query.filter_by(id = model.make_id).one().name
     print('current ID is' + str(getCurrentUserID()) + ' and modelID is '
                             + str(model.owner_id))
     return render_template('showmodel.html', model = model,
@@ -66,7 +64,7 @@ def showModel(model_id):
 
 @app.route('/showModel/<int:model_id>/JSON/')
 def showModelJSON(model_id):
-    model = session.query(Model).filter_by(id = model_id).one()
+    model = Model.query.filter_by(id = model_id).one()
     return jsonify(model.serialize)
 
 @app.route('/<int:make_id>/addModel/',  methods=['GET', 'POST'])
@@ -75,7 +73,7 @@ def addModel(make_id):
         return redirect('/login')
     if request.method == 'POST': #if user submitted the form
         # get the new id by finding the selected make name
-        make_id_update = session.query(Make).filter_by(
+        make_id_update = Make.query.filter_by(
                         name = request.form['make']).one()
 
         # build the new model object from the form inputs
@@ -91,21 +89,21 @@ def addModel(make_id):
         flash("New Model Created")
         return redirect(url_for('showMake', make_id = make_id,
                         username = getuser()))
-    current_make = session.query(Make).filter_by(id = make_id).one()
-    makes = session.query(Make).order_by(Make.name).all()
+    current_make = Make.query.filter_by(id = make_id).one()
+    makes = Make.query.order_by(Make.name).all()
     return render_template('newModel.html', make_id = make_id,
                             makes = makes, current_make = current_make.name,
                             username = getuser())
 
 @app.route('/<int:make_id>/editModel/<int:model_id>', methods=['GET', 'POST'])
 def editModel(make_id, model_id):
-    model = session.query(Model).filter_by(id = model_id).one()
+    model = Model.query.filter_by(id = model_id).one()
     if 'username' not in login_session or getCurrentUserID() != model.owner_id:
         flash("Unauthorized User")
         return redirect('/login')
 
     if request.method == 'POST':
-        make_id_update = session.query(Make).filter_by(
+        make_id_update = Make.query.filter_by(
                             name = request.form['make']).one()
 
         model.name = request.form['name']
@@ -117,8 +115,8 @@ def editModel(make_id, model_id):
         flash("Model Edited")
         return redirect(url_for('showMake', make_id = make_id,
                                 username = getuser()))
-    current_make = session.query(Make).filter_by(id = make_id).one()
-    makes = session.query(Make).order_by(Make.name).all()
+    current_make = Make.query.filter_by(id = make_id).one()
+    makes = Make.query.order_by(Make.name).all()
 
     return render_template('editModel.html', model = model,
                             makes = makes, current_make = current_make.name,
@@ -126,7 +124,7 @@ def editModel(make_id, model_id):
 
 @app.route('/deleteModel/<int:model_id>',  methods=['GET', 'POST'])
 def deleteModel(model_id):
-    deleteMe = session.query(Model).filter_by(id = model_id).one()
+    deleteMe = Model.query.filter_by(id = model_id).one()
     if 'username' not in login_session or getCurrentUserID() != deleteMe.owner_id:
         flash("Unauthorized User")
         return redirect('/login')
